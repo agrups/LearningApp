@@ -4,54 +4,56 @@ import com.LearningApp.enums.Category;
 import com.LearningApp.enums.Type;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonSetter;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
+import jakarta.persistence.*;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.sql.Date;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
 @Setter
+@Data
+@Entity
 public class Meeting {
-    private String id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    @NotBlank(message = "Name is required")
     private String name;
-    @NotNull(message = "Responsible person is required")
+
+    @ManyToOne
+    //@JoinColumn(name = "responsible_person_id", nullable = false)
     private Person responsiblePerson;
     private String description;
-    @NotNull(message = "Category is required")
     private Category category;
-    @NotNull(message = "Type is required")
     private Type type;
-
-    @NotNull(message = "Start date is required")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
     private Date startDate;
-    @NotNull(message = "End date is required")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
     private Date endDate;
 
-    @NotEmpty(message = "Attendees list cannot be empty")
-    private List<Person> attendees;
+//    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+//    private List<Person> attendees = new ArrayList<>(); // Use a mutable collection
 
-    @JsonSetter("attendees")
+    @ManyToMany
+    @JoinTable(
+            name = "meeting_attendees",
+            joinColumns = @JoinColumn(name = "meeting_id"),
+            inverseJoinColumns = @JoinColumn(name = "attendees_id")
+    )
+    private List<Person> attendees = new ArrayList<>();
+
+
     public void setAttendees(List<Person> attendees) {
-        attendees.removeIf(person -> person == null || person.getName() == null || person.getSurname() == null);
+        this.attendees.clear();
+        this.attendees.addAll(attendees);
 
-        this.attendees = attendees;
-        if (responsiblePerson != null ) {
-            boolean isAlreadyInAttendees = this.attendees.stream()
-                    .anyMatch(person -> person.getName() != null && person.getSurname() != null &&
-                            person.getName().equalsIgnoreCase(responsiblePerson.getName()) &&
-                            person.getSurname().equalsIgnoreCase(responsiblePerson.getSurname()));
-
-            if (!isAlreadyInAttendees) {
-                this.attendees.add(responsiblePerson);
-            }
+        if (responsiblePerson != null && !this.attendees.contains(responsiblePerson)) {
+            this.attendees.add(responsiblePerson);
         }
+
     }
 }

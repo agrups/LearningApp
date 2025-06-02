@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public class MeetingException extends Exception {
-    private MeetingErrorStatus status;
+    private final MeetingErrorStatus status;
 
     public MeetingException(MeetingErrorStatus status, String message) {
         super(message);
