@@ -15,7 +15,8 @@ public class PersonMapper {
         personDTO.setEmail(person.getEmail());
         return personDTO;
     }
-    public Person toPerson(PersonCreationDTO personCreationDTO){
+
+    public Person toPerson(PersonCreationDTO personCreationDTO) {
         Person person = new Person();
         person.setName(personCreationDTO.getName());
         person.setSurname(personCreationDTO.getSurname());

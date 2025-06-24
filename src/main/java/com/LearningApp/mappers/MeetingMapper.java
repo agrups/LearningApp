@@ -29,7 +29,6 @@ public class MeetingMapper {
         return meetingDTO;
     }
 
-//situos pasiaiskinti
     public Meeting fromDto(MeetingDTO meetingDTO) {
         if (meetingDTO == null) {
             return null;
@@ -45,15 +44,6 @@ public class MeetingMapper {
         meeting.setAttendees(mapAttendeesFromDto(meetingDTO.getAttendees()));
 
         return meeting;
-    }
-
-    private List<PersonDTO> mapAttendeesToDto(List<Person> attendees) {
-        if (attendees == null) {
-            return List.of();
-        }
-        return attendees.stream()
-                .map(personMapper::toDto)
-                .collect(Collectors.toList());
     }
 
     private List<Person> mapAttendeesFromDto(List<PersonDTO> attendees) {

@@ -34,27 +34,22 @@ public class Person implements UserDetails {
     @Email(message = "Invalid email")
     @NotEmpty(message = "Email cannot be empty")
     @Column(unique = true)
-    private String email; // this is our username
+    private String email;
 
-    //pasiskaityti pries tai buvusius
-    //@Password(message = "Invalid password. Password must be at least 8 characters long, contain an uppercase letter, a number, and a special character.")
-    //@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    //sukurti savo @Password anotacija
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) //turbut nereikalingas kai DTO yra
     @Column(name = "password", columnDefinition = "VARCHAR(255)")
     private String password;
-
-    @Transient // this field will not be persisted in the database
-    private List<Meeting> meetings;
-
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // returning a simple granted Authority for now
-        return List.of( new SimpleGrantedAuthority("ROLE_USER") );
+        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
     @Override
     public String getUsername() {
-        return this.email; // as email is our username
+        return this.email;
     }
 
     @Override

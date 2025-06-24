@@ -3,13 +3,12 @@ package com.LearningApp.entity;
 import com.LearningApp.enums.Category;
 import com.LearningApp.enums.Type;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonSetter;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,18 +24,14 @@ public class Meeting {
     private String name;
 
     @ManyToOne
-    //@JoinColumn(name = "responsible_person_id", nullable = false)
     private Person responsiblePerson;
     private String description;
     private Category category;
     private Type type;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
-    private Date startDate;
+    private LocalDateTime startDate;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
-    private Date endDate;
-
-//    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<Person> attendees = new ArrayList<>(); // Use a mutable collection
+    private LocalDateTime endDate;
 
     @ManyToMany
     @JoinTable(

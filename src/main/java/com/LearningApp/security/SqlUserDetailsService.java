@@ -17,9 +17,7 @@ public class SqlUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
         var optionalUser = personRepository.findByEmail(username);
-        System.out.println("vienas: " + optionalUser.isPresent());
         if(optionalUser.isPresent()) {
-            System.out.println("antras: " + optionalUser.get());
             return optionalUser.get();
         }
         throw new UsernameNotFoundException("Invalid user with username: "+ username);

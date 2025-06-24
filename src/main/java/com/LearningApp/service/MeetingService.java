@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -35,48 +36,14 @@ public class MeetingService {
     @Autowired
     PersonRepository personRepository;
 
-//    public MeetingDTO createOrUpdateMeeting(MeetingDTO meetingDto) {
-////        Meeting meeting = meetingMapper.fromDto(meetingDto);
-////        // meeting.setId(Long.valueOf(UUID.randomUUID().toString()));
-////        meetingRepository.save(meeting);
-////        return meetingMapper.toDto(meeting);
-//
-//        // Map MeetingDTO to Meeting entity
-//        Meeting meeting = meetingMapper.fromDto(meetingDto);
-//
-//        // Fetch the responsible person from the database
-//        Long personId = meetingDto.getResponsiblePerson().getId();
-//        Person responsiblePerson = personRepository.findById(personId)
-//                .orElseThrow(() -> new RuntimeException("Person with id " + personId + " not found"));
-//
-//        // Set the managed Person entity to the Meeting
-//        meeting.setResponsiblePerson(responsiblePerson);
-//
-//        // Persist the Meeting entity
-//        Meeting savedMeeting = meetingRepository.save(meeting);
-//
-//        // Map the saved Meeting entity back to MeetingDTO
-//        return meetingMapper.toDto(savedMeeting);
-//    }
-
 public MeetingDTO createOrUpdateMeeting(MeetingDTO meetingDto) throws MeetingException {
     try {
-        // Debug log
-        System.out.println("Received MeetingDTO: " + meetingDto);
-
-        // Map MeetingDTO to Meeting entity
         Meeting meeting = meetingMapper.fromDto(meetingDto);
-
-        // Fetch the responsible person from the database
         Long personId = meetingDto.getResponsiblePerson().getId();
-        System.out.println("Fetching responsible person with ID: " + personId);
         Person responsiblePerson = personRepository.findById(personId)
                 .orElseThrow(() -> new MeetingException(MeetingErrorStatus.NOT_FOUND, "Person with id " + personId + " not found"));
 
-        // Explicitly set the managed Person entity to the Meeting
         meeting.setResponsiblePerson(responsiblePerson);
-
-        // Fetch and replace detached attendees with managed entities
         List<Person> managedAttendees = meetingDto.getAttendees().stream()
                 .filter(attendee -> attendee.getId() != null)
                 .map(attendee -> {
@@ -89,11 +56,7 @@ public MeetingDTO createOrUpdateMeeting(MeetingDTO meetingDto) throws MeetingExc
                 })
                 .toList();
         meeting.setAttendees(managedAttendees);
-
-        // Persist the Meeting entity
         Meeting savedMeeting = meetingRepository.save(meeting);
-
-        // Map the saved Meeting entity back to MeetingDTO
         return meetingMapper.toDto(savedMeeting);
     } catch (Exception ex) {
         ex.printStackTrace();
@@ -103,11 +66,11 @@ public MeetingDTO createOrUpdateMeeting(MeetingDTO meetingDto) throws MeetingExc
 
     @Transactional
     public void deleteMeeting(Long id, PersonDTO personDTO) throws MeetingException {
-        Meeting meeting = meetingRepository.findById(id);
-        if (meeting == null) {
+        Optional<Meeting> meeting = meetingRepository.findById(id);
+        if (meeting.isEmpty()) {
             throw new MeetingException(MeetingErrorStatus.NOT_FOUND, "Meeting not found");
         }
-        if (!meeting.getResponsiblePerson().getId().equals(personDTO.getId())) {
+        if (!meeting.get().getResponsiblePerson().getId().equals(personDTO.getId())) {
             throw new MeetingException(MeetingErrorStatus.METHOD_NOT_ALLOWED, "Only the responsible person can delete the meeting");
         }
         meetingRepository.deleteById(id);
@@ -115,109 +78,51 @@ public MeetingDTO createOrUpdateMeeting(MeetingDTO meetingDto) throws MeetingExc
 
     @Transactional
     public void addPersonToMeeting(Long id, PersonDTO personDTO) throws MeetingException {
-//        Meeting currentMeeting = meetingRepository.findById(id);
-//        if (currentMeeting == null) {
-//            throw new MeetingException(MeetingErrorStatus.NOT_FOUND, "Meeting not found");
-//        }
-//        boolean isPersonInAnotherMeeting = !meetingRepository
-//                .findOverlappingMeetingsByAttendee(
-//                        personDTO.getName(),
-//                        personDTO.getSurname(),
-//                        currentMeeting.getStartDate(),
-//                        currentMeeting.getEndDate()
-//                ).isEmpty();
-//
-//        if (isPersonInAnotherMeeting) {
-//            throw new MeetingException(MeetingErrorStatus.METHOD_NOT_ALLOWED,
-//                    "Person is already in another meeting during the same time.");
-//        }
-//        Person person = personMapper.fromDto(personDTO);
-//        currentMeeting.getAttendees().add(person);
-//        meetingRepository.save(currentMeeting);
-
-
-
-//        Meeting currentMeeting = meetingRepository.findById(id);
-//        if (currentMeeting == null) {
-//            throw new MeetingException(MeetingErrorStatus.NOT_FOUND, "Meeting not found");
-//        }
-//
-//        // Check if the person is already in another meeting
-//        boolean isPersonInAnotherMeeting = !meetingRepository
-//                .findOverlappingMeetingsByAttendee(
-//                        personDTO.getName(),
-//                        personDTO.getSurname(),
-//                        currentMeeting.getStartDate(),
-//                        currentMeeting.getEndDate()
-//                ).isEmpty();
-//
-//        if (isPersonInAnotherMeeting) {
-//            throw new MeetingException(MeetingErrorStatus.METHOD_NOT_ALLOWED,
-//                    "Person is already in another meeting during the same time.");
-//        }
-//
-//        // Add the person to the meeting\
-//        System.out.println("haha");
-//        Person person = personMapper.fromDto(personDTO);
-//        currentMeeting.getAttendees().add(person);
-//        meetingRepository.save(currentMeeting);
-
-        // Fetch the meeting by ID
-        Meeting currentMeeting = meetingRepository.findById(id);
-        if (currentMeeting == null) {
+        Optional<Meeting> currentMeeting = meetingRepository.findById(id);
+        if (currentMeeting.isEmpty()) {
             throw new MeetingException(MeetingErrorStatus.NOT_FOUND, "Meeting not found");
         }
-
-        // Check if the person is already in another meeting during the same time
         boolean isPersonInAnotherMeeting = !meetingRepository
                 .findOverlappingMeetingsByAttendee(
-                        personDTO.getName(),
-                        personDTO.getSurname(),
-                        currentMeeting.getStartDate(),
-                        currentMeeting.getEndDate()
+                        personDTO.getEmail(),
+                        currentMeeting.get().getStartDate(),
+                        currentMeeting.get().getEndDate()
                 ).isEmpty();
-
         if (isPersonInAnotherMeeting) {
             throw new MeetingException(MeetingErrorStatus.METHOD_NOT_ALLOWED,
                     "Person is already in another meeting during the same time.");
         }
 
-        // Fetch the existing Person entity from the database
         Person person = personRepository.findById(personDTO.getId())
                 .orElseThrow(() -> new MeetingException(MeetingErrorStatus.NOT_FOUND, "Person not found"));
 
-        // Check if the person is already in the current meeting
-        if (currentMeeting.getAttendees().contains(person)) {
+        if (currentMeeting.get().getAttendees().contains(person)) {
             throw new MeetingException(MeetingErrorStatus.METHOD_NOT_ALLOWED, "Person is already in this meeting.");
         }
-
-        // Add the person to the meeting
-        currentMeeting.getAttendees().add(person);
-
-        // Save the meeting
-        meetingRepository.save(currentMeeting);
+        currentMeeting.get().getAttendees().add(person);
+        meetingRepository.save(currentMeeting.get());
     }
 
     public String removePersonFromMeeting(Long id, PersonDTO personDTO) throws MeetingException {
-        Meeting meeting = meetingRepository.findById(id);
-        if (meeting == null) {
+        Optional<Meeting> meeting = meetingRepository.findById(id);
+        if (meeting.isEmpty()) {
             throw new MeetingException(MeetingErrorStatus.NOT_FOUND, "Meeting not found");
         }
 
-        if (meeting.getResponsiblePerson().getName().equalsIgnoreCase(personDTO.getName()) &&
-                meeting.getResponsiblePerson().getSurname().equalsIgnoreCase(personDTO.getSurname())) {
+        if (meeting.get().getResponsiblePerson().getName().equalsIgnoreCase(personDTO.getName()) &&
+                meeting.get().getResponsiblePerson().getSurname().equalsIgnoreCase(personDTO.getSurname())) {
             throw new MeetingException(MeetingErrorStatus.METHOD_NOT_ALLOWED, "Cannot remove the responsible person from the meeting");
         }
 
         //prideti checka ar zmogus isviso yra tame meete
 
-        meeting.getAttendees().removeIf(person ->
+        meeting.get().getAttendees().removeIf(person ->
                 person.getName() != null && person.getSurname() != null &&
                         person.getName().equalsIgnoreCase(personDTO.getName()) &&
                         person.getSurname().equalsIgnoreCase(personDTO.getSurname())
         );
 
-        meetingRepository.save(meeting);
+        meetingRepository.save(meeting.get());
         return personDTO.getName() + " " + personDTO.getSurname() + " removed successfully.";
     }
 
@@ -280,10 +185,6 @@ public MeetingDTO createOrUpdateMeeting(MeetingDTO meetingDto) throws MeetingExc
 
         List<Meeting> meetings = meetingRepository.findAll(specification);
         return meetings.stream().map(meetingMapper::toDto).toList();
-    }
-
-    public Meeting getMeeting(Long id) {
-        return meetingRepository.findById(id);
     }
 
     public PersonDTO createPerson(PersonCreationDTO personCreationDTO) {

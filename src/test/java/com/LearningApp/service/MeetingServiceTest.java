@@ -1,100 +1,173 @@
-//package com.LearningApp.service;
-//
-//import com.LearningApp.dto.MeetingDTO;
-//import com.LearningApp.entity.Meeting;
-//import com.LearningApp.entity.Person;
-//import com.LearningApp.enums.Category;
-//import com.LearningApp.enums.Type;
-//import com.LearningApp.errors.MeetingErrorStatus;
-//import com.LearningApp.errors.MeetingException;
-//import com.LearningApp.mappers.MeetingMapper;
-//import com.LearningApp.mappers.PersonMapper;
-//import org.junit.jupiter.api.BeforeEach;
-//import org.junit.jupiter.api.Test;
-//
-//import java.util.ArrayList;
-//import java.util.Date;
-//
-//import static org.junit.jupiter.api.Assertions.*;
-//import static org.junit.jupiter.api.Assertions.assertEquals;
-//
-//public class MeetingServiceTest {
-//
-//    private MeetingService meetingService;
-//    private MeetingMapper meetingMapper;
-//    private PersonMapper personMapper;
-//
-//    @BeforeEach
-//    void setUp() {
-//        meetingMapper = new MeetingMapper(); // Initialize the mapper
-//        meetingService = new MeetingService();
-//        personMapper = new PersonMapper();
-//    }
-//
-//    @Test
-//    void testCreateOrUpdateMeeting() {
-//        Meeting meeting = getMeetingEntity("Team Meeting", Category.TeamBuilding, Type.Live);
-//        MeetingDTO meetingDTO = meetingMapper.toDto(meeting);
-//        MeetingDTO createdMeeting = meetingService.createOrUpdateMeeting(meetingDTO);
-//
-//        assertNotNull(createdMeeting.getId());
-//        assertEquals("Team Meeting", createdMeeting.getName());
-//    }
+package com.LearningApp.service;
 
-//    @Test
-//    void testDeleteMeeting() throws MeetingException {
-//        Meeting meeting = getMeetingEntity("Team Meeting Delete", Category.CodeMonkey, Type.InPerson);
-//        Meeting createdMeeting = meetingService.createOrUpdateMeeting(meeting);
-//
-//        Person responsiblePerson = new Person();
-//        responsiblePerson.setName("John");
-//        responsiblePerson.setSurname("Doe");
-//        assertNotNull(createdMeeting.getId());
-//        assertDoesNotThrow(() -> meetingService.deleteMeeting(createdMeeting.getId(), responsiblePerson));
-//    }
-//
-//    private static Meeting getMeetingEntity(String meetingName, Category codeMonkey, Type inPerson) {
-//        Meeting meeting = new Meeting();
-//        meeting.setName(meetingName);
-//        meeting.setDescription("Discuss project updates");
-//        Person person = new Person();
-//        person.setName("John");
-//        person.setSurname("Doe");
-//        meeting.setResponsiblePerson(person);
-//        meeting.setCategory(codeMonkey);
-//        meeting.setType(inPerson);
-//        meeting.setStartDate(new java.sql.Date(new Date().getTime()));
-//        meeting.setEndDate(new java.sql.Date(new Date().getTime()));
-//        meeting.setAttendees(new ArrayList<>());
-//        return meeting;
-//    }
-//
-//    @Test
-//    void testDeleteMeetingThrowsExceptionWhenNotFound() {
-//        Person responsiblePerson = new Person();
-//        responsiblePerson.setName("John");
-//        responsiblePerson.setSurname("Doe");
-//        MeetingException exception = assertThrows(MeetingException.class, () -> {
-//            meetingService.deleteMeeting("invalid-id", responsiblePerson);
-//        });
-//
-//        assertEquals(MeetingErrorStatus.NOT_FOUND, exception.getStatus());
-//        assertEquals("Meeting not found", exception.getMessage());
-//    }
-//
-//    @Test
-//    void testAddPersonToMeeting() throws MeetingException {
-//        Meeting meeting = getMeetingEntity("Team Meeting Add Person", Category.CodeMonkey, Type.InPerson);
-//        Meeting createdMeeting = meetingService.createOrUpdateMeeting(meeting);
-//
-//        Person attendee = new Person();
-//        attendee.setName("Vardas");
-//        attendee.setSurname("Pavarde");
-//        String result = meetingService.addPersonToMeeting(createdMeeting.getId(), attendee);
-//
-//        assertTrue(result.contains("added successfully"));
-//        assertEquals(2, meeting.getAttendees().size());
-//        assertEquals(attendee.getName(), meeting.getAttendees().get(1).getName());
-//        assertEquals(attendee.getSurname(), meeting.getAttendees().get(1).getSurname());
-//    }
-//}
+import com.LearningApp.dto.MeetingDTO;
+import com.LearningApp.dto.PersonDTO;
+import com.LearningApp.entity.Meeting;
+import com.LearningApp.entity.Person;
+import com.LearningApp.enums.Category;
+import com.LearningApp.enums.Type;
+import com.LearningApp.errors.MeetingErrorStatus;
+import com.LearningApp.errors.MeetingException;
+import com.LearningApp.mappers.MeetingMapper;
+import com.LearningApp.mappers.PersonMapper;
+import com.LearningApp.repository.MeetingRepository;
+import com.LearningApp.repository.PersonRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+public class MeetingServiceTest {
+
+    private static final Long PERSON_ID = 1L;
+    private static final String PERSON_NAME = "John";
+    private static final String PERSON_SURNAME = "Doe";
+    private static final String PERSON_EMAIL = "somemeail@test.com";
+    private static final Long MEETING_ID = 1L;
+
+    @Mock
+    private MeetingRepository meetingRepositoryMock;
+    @Mock
+    private PersonRepository personRepositoryMock;
+    @Mock
+    private MeetingMapper meetingMapperMock;
+    @Mock
+    private PersonMapper personMapperMock;
+
+    @InjectMocks
+    private MeetingService meetingService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void shouldCreateOrUpdateMeeting() throws MeetingException {
+        Meeting meeting = createMeetingEntity();
+        MeetingDTO meetingDTO = createMeetingDTO();
+
+        when(meetingMapperMock.toDto(any(Meeting.class))).thenReturn(meetingDTO);
+        when(meetingMapperMock.fromDto(any(MeetingDTO.class))).thenReturn(meeting);
+        when(meetingRepositoryMock.save(any(Meeting.class))).thenReturn(meeting);
+        when(personRepositoryMock.findById(PERSON_ID)).thenReturn(Optional.of(meeting.getResponsiblePerson()));
+
+        MeetingDTO createdMeeting = meetingService.createOrUpdateMeeting(meetingDTO);
+
+        assertNotNull(createdMeeting.getId());
+        assertEquals(meeting.getName(), createdMeeting.getName());
+    }
+
+    @Test
+    void shouldDeleteMeeting() throws MeetingException {
+        Meeting meeting = createMeetingEntity();
+        MeetingDTO meetingDTO = createMeetingDTO();
+        PersonDTO responsiblePerson = meetingDTO.getResponsiblePerson();
+
+        when(meetingMapperMock.toDto(meeting)).thenReturn(meetingDTO);
+        when(meetingMapperMock.fromDto(meetingDTO)).thenReturn(meeting);
+        when(meetingRepositoryMock.save(any(Meeting.class))).thenReturn(meeting);
+        when(personRepositoryMock.findById(PERSON_ID)).thenReturn(Optional.of(meeting.getResponsiblePerson()));
+        when(meetingRepositoryMock.findById(MEETING_ID)).thenReturn(Optional.of(meeting));
+
+        meetingService.createOrUpdateMeeting(meetingDTO);
+
+        assertDoesNotThrow(() -> meetingService.deleteMeeting(MEETING_ID, responsiblePerson));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenMeetingNotFoundOnDelete() {
+        PersonDTO responsiblePerson = createPersonDTO();
+
+        when(meetingRepositoryMock.findById(999L)).thenReturn(Optional.empty());
+        MeetingException exception = assertThrows(MeetingException.class, () -> {
+            meetingService.deleteMeeting(999L, responsiblePerson);
+        });
+
+        assertEquals(MeetingErrorStatus.NOT_FOUND, exception.getStatus());
+        assertEquals("Meeting not found", exception.getMessage());
+    }
+
+    @Test
+    void shouldAddPersonToMeeting() throws MeetingException {
+        Meeting meeting = createMeetingEntity();
+        MeetingDTO meetingDTO = createMeetingDTO();
+
+        Person newAttendee = new Person();
+        newAttendee.setId(2L);
+        newAttendee.setName("Vardas");
+        newAttendee.setSurname("Pavarde");
+
+        when(meetingMapperMock.toDto(any(Meeting.class))).thenReturn(meetingDTO);
+        when(meetingMapperMock.fromDto(any(MeetingDTO.class))).thenReturn(meeting);
+        when(meetingRepositoryMock.save(any(Meeting.class))).thenReturn(meeting);
+        when(personRepositoryMock.findById(PERSON_ID)).thenReturn(Optional.of(meeting.getResponsiblePerson()));
+        when(personRepositoryMock.findById(2L)).thenReturn(Optional.of(newAttendee));
+        when(meetingRepositoryMock.findById(MEETING_ID)).thenReturn(Optional.of(meeting));
+        when(meetingRepositoryMock.findOverlappingMeetingsByAttendee(any(), any(), any())).thenReturn(new ArrayList<>());
+
+        meetingService.createOrUpdateMeeting(meetingDTO);
+
+        PersonDTO attendee = new PersonDTO();
+        attendee.setId(2L);
+        attendee.setName("Vardas");
+        attendee.setSurname("Pavarde");
+
+        assertDoesNotThrow(() -> meetingService.addPersonToMeeting(MEETING_ID, attendee));
+    }
+
+    private Meeting createMeetingEntity() {
+        Meeting meeting = new Meeting();
+        meeting.setId(MEETING_ID);
+        meeting.setName("Team Meeting");
+        meeting.setDescription("Discuss project updates");
+        Person person = new Person();
+        person.setId(PERSON_ID);
+        person.setName(PERSON_NAME);
+        person.setSurname(PERSON_SURNAME);
+        person.setEmail(PERSON_EMAIL);
+        meeting.setResponsiblePerson(person);
+        meeting.setCategory(Category.TeamBuilding);
+        meeting.setType(Type.Live);
+        meeting.setStartDate(java.time.LocalDateTime.now());
+        meeting.setEndDate(java.time.LocalDateTime.now().plusHours(1));        List<Person> attendees = new ArrayList<>();
+        attendees.add(person);
+        meeting.setAttendees(attendees);
+        return meeting;
+    }
+
+    private MeetingDTO createMeetingDTO() {
+        MeetingDTO meetingDTO = new MeetingDTO();
+        meetingDTO.setId(MEETING_ID);
+        meetingDTO.setName("Team Meeting");
+        meetingDTO.setDescription("Discuss project updates");
+        meetingDTO.setCategory(Category.TeamBuilding);
+        meetingDTO.setType(Type.Live);
+        meetingDTO.setStartDate(java.time.LocalDateTime.now());
+        meetingDTO.setEndDate(java.time.LocalDateTime.now().plusHours(1));
+        PersonDTO responsiblePerson = createPersonDTO();
+        meetingDTO.setResponsiblePerson(responsiblePerson);
+        List<PersonDTO> attendees = new ArrayList<>();
+        attendees.add(responsiblePerson);
+        meetingDTO.setAttendees(attendees);
+        return meetingDTO;
+    }
+
+    private PersonDTO createPersonDTO() {
+        PersonDTO personDTO = new PersonDTO();
+        personDTO.setId(PERSON_ID);
+        personDTO.setName(PERSON_NAME);
+        personDTO.setSurname(PERSON_SURNAME);
+        personDTO.setEmail(PERSON_EMAIL);
+        return personDTO;
+    }
+}

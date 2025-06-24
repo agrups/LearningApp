@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.sql.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -27,10 +27,10 @@ public class MeetingDTO {
     private Type type;
     @NotNull(message = "Start date is required")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
-    private Date startDate;
+    private LocalDateTime startDate;
     @NotNull(message = "End date is required")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm")
-    private Date endDate;
+    private LocalDateTime endDate;
     @NotEmpty(message = "Attendees list cannot be empty")
     private List<PersonDTO> attendees;
 }
