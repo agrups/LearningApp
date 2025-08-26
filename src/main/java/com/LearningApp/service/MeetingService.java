@@ -1,34 +1,28 @@
 package com.LearningApp.service;
 
 import com.LearningApp.dto.MeetingDTO;
-import com.LearningApp.dto.PersonCreationDTO;
 import com.LearningApp.dto.PersonDTO;
 import com.LearningApp.entity.Meeting;
 import com.LearningApp.entity.Person;
 import com.LearningApp.errors.MeetingErrorStatus;
 import com.LearningApp.errors.MeetingException;
 import com.LearningApp.mappers.MeetingMapper;
-import com.LearningApp.mappers.PersonMapper;
 import com.LearningApp.pojo.MeetingFilter;
 import com.LearningApp.repository.MeetingRepository;
 import com.LearningApp.repository.PersonRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.crypto.factory.PasswordEncoderFactories;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
+import static java.util.stream.Collectors.toList;
+
 
 @Service
 public class MeetingService {
-    @Autowired
-    MeetingMapper meetingMapper;
-    @Autowired
-    PersonMapper personMapper;
 
     @Autowired
     MeetingRepository meetingRepository;
@@ -36,9 +30,11 @@ public class MeetingService {
     @Autowired
     PersonRepository personRepository;
 
-public MeetingDTO createOrUpdateMeeting(MeetingDTO meetingDto) throws MeetingException {
-    try {
-        Meeting meeting = meetingMapper.fromDto(meetingDto);
+    @Autowired
+    MeetingMapper mapper;
+
+    public MeetingDTO createOrUpdateMeeting(MeetingDTO meetingDto) throws MeetingException {
+        Meeting meeting = mapper.fromDTO(meetingDto);
         Long personId = meetingDto.getResponsiblePerson().getId();
         Person responsiblePerson = personRepository.findById(personId)
                 .orElseThrow(() -> new MeetingException(MeetingErrorStatus.NOT_FOUND, "Person with id " + personId + " not found"));
@@ -46,23 +42,12 @@ public MeetingDTO createOrUpdateMeeting(MeetingDTO meetingDto) throws MeetingExc
         meeting.setResponsiblePerson(responsiblePerson);
         List<Person> managedAttendees = meetingDto.getAttendees().stream()
                 .filter(attendee -> attendee.getId() != null)
-                .map(attendee -> {
-                    try {
-                        return personRepository.findById(attendee.getId())
-                                .orElseThrow(() -> new MeetingException(MeetingErrorStatus.NOT_FOUND, "Person with id " + attendee.getId() + " not found"));
-                    } catch (MeetingException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-                .toList();
+                .map(attendee -> personRepository.findById(attendee.getId()).get())
+                .collect(toList());
         meeting.setAttendees(managedAttendees);
         Meeting savedMeeting = meetingRepository.save(meeting);
-        return meetingMapper.toDto(savedMeeting);
-    } catch (Exception ex) {
-        ex.printStackTrace();
-        throw ex; // Re-throw to be handled by the global exception handler
+        return mapper.toDTO(savedMeeting);
     }
-}
 
     @Transactional
     public void deleteMeeting(Long id, PersonDTO personDTO) throws MeetingException {
@@ -128,19 +113,6 @@ public MeetingDTO createOrUpdateMeeting(MeetingDTO meetingDto) throws MeetingExc
 
 
     public List<MeetingDTO> getFilteredMeetings(MeetingFilter meetingFilter) {
-//        return meetingEntityHashMap.values().stream()
-//                .filter(meeting -> meetingFilter.getDescription() == null || meeting.getDescription().toLowerCase().contains(meetingFilter.getDescription().toLowerCase()))
-//                .filter(meeting -> meetingFilter.getResponsiblePerson() == null ||
-//                        (meeting.getResponsiblePerson().getName().equalsIgnoreCase(meetingFilter.getResponsiblePerson().getName()) &&
-//                                        meeting.getResponsiblePerson().getSurname().equalsIgnoreCase(meetingFilter.getResponsiblePerson().getSurname())))
-//                .filter(meeting -> meetingFilter.getCategory() == null || meeting.getCategory() == meetingFilter.getCategory())
-//                .filter(meeting -> meetingFilter.getType() == null || meeting.getType() == meetingFilter.getType())
-//                .filter(meeting -> meetingFilter.getStartDate() == null || !meeting.getStartDate().before(meetingFilter.getStartDate()))
-//                .filter(meeting -> meetingFilter.getEndDate() == null || !meeting.getEndDate().after(meetingFilter.getEndDate()))
-//                .filter(meeting -> meetingFilter.getMinAttendees() == null || meeting.getAttendees().size() > meetingFilter.getMinAttendees())
-//                .map(meetingMapper::toDto)
-//                .toList();
-
         Specification<Meeting> specification = Specification.where(null);
 
         if (meetingFilter.getDescription() != null) {
@@ -184,34 +156,6 @@ public MeetingDTO createOrUpdateMeeting(MeetingDTO meetingDto) throws MeetingExc
         }
 
         List<Meeting> meetings = meetingRepository.findAll(specification);
-        return meetings.stream().map(meetingMapper::toDto).toList();
-    }
-
-    public PersonDTO createPerson(PersonCreationDTO personCreationDTO) {
-
-        PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
-        personCreationDTO.setPassword(encoder.encode(personCreationDTO.getPassword()));
-
-        var db_user = getUserByEmail(personCreationDTO.getEmail());
-        if(db_user != null) {
-            // user already exists, only update a few fields
-            db_user.setName(personCreationDTO.getName());
-            db_user.setSurname(personCreationDTO.getSurname());
-            db_user.setPassword(personCreationDTO.getPassword());
-            personRepository.saveAndFlush(db_user);
-            return personMapper.toDto(db_user);
-        }
-
-        Person person = personMapper.toPerson(personCreationDTO);
-        personRepository.saveAndFlush(person);
-        return personMapper.toDto(person);
-    }
-
-    public Person getUserByEmail(String email) {
-        var o_user = personRepository.findByEmail(email);
-        if(o_user.isPresent()) {
-            return o_user.get();
-        }
-        return null;
+        return meetings.stream().map(mapper::toDTO).toList();
     }
 }

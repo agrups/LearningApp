@@ -27,10 +27,10 @@ public class SecurityConfig {
     @Bean // Influencing the filter chain, filtering what to allow and what to block, with roles specification
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.ignoringRequestMatchers(new AntPathRequestMatcher("/api/**")))
+                .csrf(csrf -> csrf.ignoringRequestMatchers(new AntPathRequestMatcher("/v1/**")))
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers(new AntPathRequestMatcher("/api/register")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/api/**")).hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(new AntPathRequestMatcher("/v1/users/registration")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/v1/**")).hasAnyRole("USER", "ADMIN")
                         .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

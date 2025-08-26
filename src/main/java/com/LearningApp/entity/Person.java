@@ -25,10 +25,10 @@ public class Person implements UserDetails {
     @JsonIgnore
     private Long id;
 
-    @Column(name = "name", columnDefinition = "VARCHAR(255)")
+    @Column(name = "name")
     private String name;
 
-    @Column(name = "surname", columnDefinition = "VARCHAR(255)")
+    @Column(name = "surname")
     private String surname;
 
     @Email(message = "Invalid email")
@@ -38,7 +38,7 @@ public class Person implements UserDetails {
 
     //sukurti savo @Password anotacija
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) //turbut nereikalingas kai DTO yra
-    @Column(name = "password", columnDefinition = "VARCHAR(255)")
+    @Column(name = "password")
     private String password;
 
     @Override

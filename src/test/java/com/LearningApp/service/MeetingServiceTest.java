@@ -14,6 +14,7 @@ import com.LearningApp.repository.MeetingRepository;
 import com.LearningApp.repository.PersonRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -38,13 +39,12 @@ public class MeetingServiceTest {
     private MeetingRepository meetingRepositoryMock;
     @Mock
     private PersonRepository personRepositoryMock;
-    @Mock
-    private MeetingMapper meetingMapperMock;
-    @Mock
-    private PersonMapper personMapperMock;
 
     @InjectMocks
     private MeetingService meetingService;
+
+    MeetingMapper meetingMapper = Mappers.getMapper(MeetingMapper.class);
+    PersonMapper personMapper = Mappers.getMapper(PersonMapper.class);
 
     @BeforeEach
     void setUp() {
@@ -56,8 +56,8 @@ public class MeetingServiceTest {
         Meeting meeting = createMeetingEntity();
         MeetingDTO meetingDTO = createMeetingDTO();
 
-        when(meetingMapperMock.toDto(any(Meeting.class))).thenReturn(meetingDTO);
-        when(meetingMapperMock.fromDto(any(MeetingDTO.class))).thenReturn(meeting);
+        when(meetingMapper.toDTO(any(Meeting.class))).thenReturn(meetingDTO);
+        when(meetingMapper.fromDTO(any(MeetingDTO.class))).thenReturn(meeting);
         when(meetingRepositoryMock.save(any(Meeting.class))).thenReturn(meeting);
         when(personRepositoryMock.findById(PERSON_ID)).thenReturn(Optional.of(meeting.getResponsiblePerson()));
 
@@ -73,8 +73,8 @@ public class MeetingServiceTest {
         MeetingDTO meetingDTO = createMeetingDTO();
         PersonDTO responsiblePerson = meetingDTO.getResponsiblePerson();
 
-        when(meetingMapperMock.toDto(meeting)).thenReturn(meetingDTO);
-        when(meetingMapperMock.fromDto(meetingDTO)).thenReturn(meeting);
+        when(meetingMapper.toDTO(meeting)).thenReturn(meetingDTO);
+        when(meetingMapper.fromDTO(meetingDTO)).thenReturn(meeting);
         when(meetingRepositoryMock.save(any(Meeting.class))).thenReturn(meeting);
         when(personRepositoryMock.findById(PERSON_ID)).thenReturn(Optional.of(meeting.getResponsiblePerson()));
         when(meetingRepositoryMock.findById(MEETING_ID)).thenReturn(Optional.of(meeting));
@@ -107,8 +107,8 @@ public class MeetingServiceTest {
         newAttendee.setName("Vardas");
         newAttendee.setSurname("Pavarde");
 
-        when(meetingMapperMock.toDto(any(Meeting.class))).thenReturn(meetingDTO);
-        when(meetingMapperMock.fromDto(any(MeetingDTO.class))).thenReturn(meeting);
+        when(meetingMapper.toDTO(any(Meeting.class))).thenReturn(meetingDTO);
+        when(meetingMapper.fromDTO(any(MeetingDTO.class))).thenReturn(meeting);
         when(meetingRepositoryMock.save(any(Meeting.class))).thenReturn(meeting);
         when(personRepositoryMock.findById(PERSON_ID)).thenReturn(Optional.of(meeting.getResponsiblePerson()));
         when(personRepositoryMock.findById(2L)).thenReturn(Optional.of(newAttendee));
@@ -136,8 +136,8 @@ public class MeetingServiceTest {
         person.setSurname(PERSON_SURNAME);
         person.setEmail(PERSON_EMAIL);
         meeting.setResponsiblePerson(person);
-        meeting.setCategory(Category.TeamBuilding);
-        meeting.setType(Type.Live);
+        meeting.setCategory(Category.TEAM_BUILDING);
+        meeting.setType(Type.LIVE);
         meeting.setStartDate(java.time.LocalDateTime.now());
         meeting.setEndDate(java.time.LocalDateTime.now().plusHours(1));        List<Person> attendees = new ArrayList<>();
         attendees.add(person);
@@ -150,8 +150,8 @@ public class MeetingServiceTest {
         meetingDTO.setId(MEETING_ID);
         meetingDTO.setName("Team Meeting");
         meetingDTO.setDescription("Discuss project updates");
-        meetingDTO.setCategory(Category.TeamBuilding);
-        meetingDTO.setType(Type.Live);
+        meetingDTO.setCategory(Category.TEAM_BUILDING);
+        meetingDTO.setType(Type.LIVE);
         meetingDTO.setStartDate(java.time.LocalDateTime.now());
         meetingDTO.setEndDate(java.time.LocalDateTime.now().plusHours(1));
         PersonDTO responsiblePerson = createPersonDTO();

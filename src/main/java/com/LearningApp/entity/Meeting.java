@@ -49,6 +49,5 @@ public class Meeting {
         if (responsiblePerson != null && !this.attendees.contains(responsiblePerson)) {
             this.attendees.add(responsiblePerson);
         }
-
     }
 }

@@ -1,0 +1,55 @@
+package com.LearningApp.service;
+
+import com.LearningApp.dto.PersonCreationDTO;
+import com.LearningApp.dto.PersonDTO;
+import com.LearningApp.entity.Person;
+import com.LearningApp.mappers.PersonMapper;
+import com.LearningApp.repository.PersonRepository;
+import org.mapstruct.factory.Mappers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class PersonService {
+    @Autowired
+    PersonRepository personRepository;
+
+    @Autowired
+    PersonMapper mapper;
+
+    public PersonDTO createPerson(PersonCreationDTO personCreationDTO) {
+
+        PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
+        personCreationDTO.setPassword(encoder.encode(personCreationDTO.getPassword()));
+
+        var dbUser = getUserByEmail(personCreationDTO.getEmail());
+        if (dbUser != null) {
+            // user already exists, only update a few fields
+            dbUser.setName(personCreationDTO.getName());
+            dbUser.setSurname(personCreationDTO.getSurname());
+            dbUser.setPassword(personCreationDTO.getPassword());
+            personRepository.save(dbUser);
+            return mapper.toDTO(dbUser);
+        }
+
+        Person person = mapper.toPerson(personCreationDTO);
+        personRepository.saveAndFlush(person);
+        return mapper.toDTO(person);
+    }
+
+    public Person getUserByEmail(String email) {
+        var user = personRepository.findByEmail(email);
+        return user.orElse(null);
+    }
+
+    public List<PersonDTO> getPersonList() {
+        PersonMapper mapper = Mappers.getMapper(PersonMapper.class);
+        return personRepository.findAll().stream()
+                .map(mapper::toDTO)
+                .toList();
+    }
+}

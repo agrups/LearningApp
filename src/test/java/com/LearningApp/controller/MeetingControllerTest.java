@@ -36,7 +36,7 @@ public class MeetingControllerTest {
 
     @Test
     void testCreateMeeting() throws Exception {
-        MeetingDTO meetingDTO = getMeetingDTO("Team Meeting", Category.CodeMonkey, Type.InPerson);
+        MeetingDTO meetingDTO = getMeetingDTO("Team Meeting", Category.CODE_MONKEY, Type.IN_PERSON);
         ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
         String meetingJson = objectMapper.writeValueAsString(meetingDTO);
         when(meetingService.createOrUpdateMeeting(any(MeetingDTO.class))).thenReturn(meetingDTO);
