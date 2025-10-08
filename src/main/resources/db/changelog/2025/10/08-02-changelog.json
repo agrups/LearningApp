@@ -1,0 +1,19 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "1759924083586-4",
+        "author": "greta",
+        "objectQuotingStrategy": "QUOTE_ONLY_RESERVED_WORDS",
+        "changes": [
+          {
+            "dropColumn": {
+              "columnName": "phone_number",
+              "tableName": "person"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

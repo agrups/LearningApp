@@ -1,0 +1,20 @@
+{
+  "databaseChangeLog": [
+    {
+      "changeSet": {
+        "id": "1758563099725-1",
+        "author": "greta",
+        "objectQuotingStrategy": "QUOTE_ONLY_RESERVED_WORDS",
+        "changes": [
+          {
+            "dropNotNullConstraint": {
+              "columnDataType": "varchar(255)",
+              "columnName": "email",
+              "tableName": "person"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
