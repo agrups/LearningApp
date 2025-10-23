@@ -15,4 +15,5 @@ public class PersonCreationDTO {
     private String password;
     @NotBlank(message = "Email is required")
     private String email;
+    private String role; // Optional: can be 'USER' or 'ADMIN'
 }

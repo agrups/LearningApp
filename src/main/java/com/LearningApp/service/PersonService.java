@@ -19,7 +19,7 @@ public class PersonService {
     PersonRepository personRepository;
 
     @Autowired
-    PersonMapper mapper;
+    PersonMapper personMapper;
 
     public PersonDTO createPerson(PersonCreationDTO personCreationDTO) {
 
@@ -33,12 +33,18 @@ public class PersonService {
             dbUser.setSurname(personCreationDTO.getSurname());
             dbUser.setPassword(personCreationDTO.getPassword());
             personRepository.save(dbUser);
-            return mapper.toDTO(dbUser);
+            return personMapper.toDTO(dbUser);
         }
 
-        Person person = mapper.toPerson(personCreationDTO);
+        Person person = personMapper.toPerson(personCreationDTO);
+        // Set role if provided, otherwise default to USER
+        if (personCreationDTO.getRole() != null && !personCreationDTO.getRole().isBlank()) {
+            person.setRole(personCreationDTO.getRole().toUpperCase());
+        } else {
+            person.setRole("USER");
+        }
         personRepository.saveAndFlush(person);
-        return mapper.toDTO(person);
+        return personMapper.toDTO(person);
     }
 
     public Person getUserByEmail(String email) {

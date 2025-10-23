@@ -41,10 +41,13 @@ public class Person implements UserDetails {
     @Column(name = "password")
     private String password;
 
+    @Column(name = "role")
+    private String role = "USER"; // Default role
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // returning a simple granted Authority for now
-        return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        String roleName = (role != null && role.equalsIgnoreCase("ADMIN")) ? "ROLE_ADMIN" : "ROLE_USER";
+        return List.of(new SimpleGrantedAuthority(roleName));
     }
 
     @Override

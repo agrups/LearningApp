@@ -31,10 +31,10 @@ public class MeetingService {
     PersonRepository personRepository;
 
     @Autowired
-    MeetingMapper mapper;
+    MeetingMapper meetingMapper;
 
     public MeetingDTO createOrUpdateMeeting(MeetingDTO meetingDto) throws MeetingException {
-        Meeting meeting = mapper.fromDTO(meetingDto);
+        Meeting meeting = meetingMapper.fromDTO(meetingDto);
         Long personId = meetingDto.getResponsiblePerson().getId();
         Person responsiblePerson = personRepository.findById(personId)
                 .orElseThrow(() -> new MeetingException(MeetingErrorStatus.NOT_FOUND, "Person with id " + personId + " not found"));
@@ -46,7 +46,7 @@ public class MeetingService {
                 .collect(toList());
         meeting.setAttendees(managedAttendees);
         Meeting savedMeeting = meetingRepository.save(meeting);
-        return mapper.toDTO(savedMeeting);
+        return meetingMapper.toDTO(savedMeeting);
     }
 
     @Transactional
@@ -156,6 +156,6 @@ public class MeetingService {
         }
 
         List<Meeting> meetings = meetingRepository.findAll(specification);
-        return meetings.stream().map(mapper::toDTO).toList();
+        return meetings.stream().map(meetingMapper::toDTO).toList();
     }
 }
