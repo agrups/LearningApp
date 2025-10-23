@@ -1,5 +1,6 @@
 package com.LearningApp.entity;
 
+import com.LearningApp.validation.Password;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
@@ -36,13 +37,16 @@ public class Person implements UserDetails {
     @Column(unique = true)
     private String email;
 
-    //sukurti savo @Password anotacija
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) //turbut nereikalingas kai DTO yra
+    @Password(message = "Invalid password. Password must be at least 8 characters long, contain an uppercase letter, a lower case and a number.")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(name = "password")
     private String password;
 
     @Column(name = "role")
     private String role = "USER"; // Default role
+
+    @OneToMany(mappedBy = "responsiblePerson")
+    private List<Meeting> meetings;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
