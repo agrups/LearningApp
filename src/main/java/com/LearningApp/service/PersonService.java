@@ -16,10 +16,10 @@ import java.util.List;
 @Service
 public class PersonService {
     @Autowired
-    PersonRepository personRepository;
+    private PersonRepository personRepository;
 
     @Autowired
-    PersonMapper personMapper;
+    private PersonMapper personMapper;
 
     public PersonDTO createPerson(PersonCreationDTO personCreationDTO) {
 

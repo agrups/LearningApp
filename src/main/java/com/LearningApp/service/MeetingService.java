@@ -25,13 +25,13 @@ import static java.util.stream.Collectors.toList;
 public class MeetingService {
 
     @Autowired
-    MeetingRepository meetingRepository;
+    private MeetingRepository meetingRepository;
 
     @Autowired
-    PersonRepository personRepository;
+    private PersonRepository personRepository;
 
     @Autowired
-    MeetingMapper meetingMapper;
+    private MeetingMapper meetingMapper;
 
     public MeetingDTO createOrUpdateMeeting(MeetingDTO meetingDto) throws MeetingException {
         Meeting meeting = meetingMapper.fromDTO(meetingDto);
