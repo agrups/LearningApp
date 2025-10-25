@@ -9,12 +9,10 @@ import com.LearningApp.enums.Type;
 import com.LearningApp.errors.MeetingErrorStatus;
 import com.LearningApp.errors.MeetingException;
 import com.LearningApp.mappers.MeetingMapper;
-import com.LearningApp.mappers.PersonMapper;
 import com.LearningApp.repository.MeetingRepository;
 import com.LearningApp.repository.PersonRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -39,12 +37,12 @@ public class MeetingServiceTest {
     private MeetingRepository meetingRepositoryMock;
     @Mock
     private PersonRepository personRepositoryMock;
+    @Mock
+    private MeetingMapper meetingMapper;
 
     @InjectMocks
     private MeetingService meetingService;
 
-    MeetingMapper meetingMapper = Mappers.getMapper(MeetingMapper.class);
-    PersonMapper personMapper = Mappers.getMapper(PersonMapper.class);
 
     @BeforeEach
     void setUp() {
@@ -89,9 +87,7 @@ public class MeetingServiceTest {
         PersonDTO responsiblePerson = createPersonDTO();
 
         when(meetingRepositoryMock.findById(999L)).thenReturn(Optional.empty());
-        MeetingException exception = assertThrows(MeetingException.class, () -> {
-            meetingService.deleteMeeting(999L, responsiblePerson);
-        });
+        MeetingException exception = assertThrows(MeetingException.class, () -> meetingService.deleteMeeting(999L, responsiblePerson));
 
         assertEquals(MeetingErrorStatus.NOT_FOUND, exception.getStatus());
         assertEquals("Meeting not found", exception.getMessage());

@@ -10,7 +10,6 @@ import com.LearningApp.mappers.MeetingMapper;
 import com.LearningApp.pojo.MeetingFilter;
 import com.LearningApp.repository.MeetingRepository;
 import com.LearningApp.repository.PersonRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,14 +23,15 @@ import static java.util.stream.Collectors.toList;
 @Service
 public class MeetingService {
 
-    @Autowired
-    private MeetingRepository meetingRepository;
+    private final MeetingRepository meetingRepository;
+    private final PersonRepository personRepository;
+    private final MeetingMapper meetingMapper;
 
-    @Autowired
-    private PersonRepository personRepository;
-
-    @Autowired
-    private MeetingMapper meetingMapper;
+    public MeetingService(MeetingRepository meetingRepository, PersonRepository personRepository, MeetingMapper meetingMapper) {
+        this.meetingRepository = meetingRepository;
+        this.personRepository = personRepository;
+        this.meetingMapper = meetingMapper;
+    }
 
     public MeetingDTO createOrUpdateMeeting(MeetingDTO meetingDto) throws MeetingException {
         Meeting meeting = meetingMapper.fromDTO(meetingDto);

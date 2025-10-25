@@ -6,7 +6,6 @@ import com.LearningApp.entity.Person;
 import com.LearningApp.mappers.PersonMapper;
 import com.LearningApp.repository.PersonRepository;
 import org.mapstruct.factory.Mappers;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,11 +14,13 @@ import java.util.List;
 
 @Service
 public class PersonService {
-    @Autowired
-    private PersonRepository personRepository;
+    private final PersonRepository personRepository;
+    private final PersonMapper personMapper;
 
-    @Autowired
-    private PersonMapper personMapper;
+    public PersonService(PersonRepository personRepository, PersonMapper personMapper) {
+        this.personRepository = personRepository;
+        this.personMapper = personMapper;
+    }
 
     public PersonDTO createPerson(PersonCreationDTO personCreationDTO) {
 

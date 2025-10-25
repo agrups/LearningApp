@@ -6,7 +6,6 @@ import com.LearningApp.errors.MeetingException;
 import com.LearningApp.pojo.MeetingFilter;
 import com.LearningApp.service.MeetingService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,8 +16,11 @@ import java.util.List;
 @RequestMapping("/v1/meetings")
 public class MeetingController {
 
-    @Autowired
-    private MeetingService meetingService;
+    private final MeetingService meetingService;
+
+    public MeetingController(MeetingService meetingService) {
+        this.meetingService = meetingService;
+    }
 
     @PostMapping("")
     public ResponseEntity<?> createOrUpdateMeeting(@Valid @RequestBody MeetingDTO meetingDTO) throws MeetingException {
